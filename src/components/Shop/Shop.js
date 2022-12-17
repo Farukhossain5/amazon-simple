@@ -3,38 +3,50 @@ import Cart from '../cart/Cart';
 import Product from '../Product/Product';
 import { addToDb, getStoredCart } from '../../utilities/fakedb';
 import './Shop.css'
+import { faExternalLinkSquareAlt } from '@fortawesome/free-solid-svg-icons';
 const Shop = () => {
     const [products, setProducts] = useState([]);
-
     const [cart, setCart] = useState([]);
-
     useEffect(() => {
-        console.log('product fast before fetch')
         fetch('products.json')
             .then(res => res.json())
             .then(data => {
                 setProducts(data);
                 console.log('product lodeded')
-
             });
     }, [])
 
     useEffect(() => {
-        console.log('lacal storage first line')
         const storedCart = getStoredCart();
+        const savedCart = [];
         for (const id in storedCart) {
             const addedProduct = products.find(product => product.id === id);
-            console.log(addedProduct);
-        }
-        console.log('local store finish')
-    }, [])
-    const handleAddToCart=(product)=>{
-        // console.log(product);
-        const newCart = [...cart, product];
-        setCart(newCart);
-        addToDb(product.id)
-    }
+            if (addedProduct) {
+                const quantity = storedCart[id];
+                addedProduct.quantity = quantity;
+                savedCart.push(addedProduct);
+            }
 
+        }
+        setCart(savedCart);
+    }, [products])
+    const handleAddToCart = (selectedProduct) => {
+        console.log(handleAddToCart);
+        let newCart = [];
+        const exists = cart.find(product => product.id === selectedProduct.id);
+        if (!exists) {
+            selectedProduct.quantity = 1;
+            newCart = [...cart, selectedProduct];
+        } 
+        else {
+            const rest = cart.filter(product => product.id !== selectedProduct.id);
+            exists.quantity = exists.quantity + 1;
+            newCart = [...rest, exists];
+        }
+
+        setCart(newCart);
+        addToDb(selectedProduct.id)
+    }
     return (
         <div className='shop-container'>
             <div className="products-container">
